@@ -26,7 +26,7 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
         setError(data.error ?? "登录失败");
         return;
       }
-      router.push(mode === "admin" ? "/admin" : "/products");
+      router.push(mode === "admin" ? "/admin" : "/user");
       router.refresh();
     } catch {
       setError("网络异常，请重试");

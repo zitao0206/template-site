@@ -15,7 +15,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-8">
       <section className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-10 text-white">
-        <h1 className="text-2xl font-bold">商品站 V1</h1>
+        <h1 className="text-2xl font-bold">商品模版网站首页</h1>
         <p className="mt-2 text-sm text-blue-100">
           管理员发布商品 → 存数据库 → 用户浏览挑选 → 进详情页
         </p>

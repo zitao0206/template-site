@@ -7,7 +7,8 @@ export default function LogoutButton() {
 
   async function onLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/admin/login");
+    // router.push("/admin/login");
+    router.push("/"); // 退出后跳首页，你可以改成 /login
     router.refresh();
   }
 

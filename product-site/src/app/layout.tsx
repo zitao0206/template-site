@@ -3,8 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "商品站 V1",
-  description: "一个人也能维护的商品管理系统",
+  title: "商品站首页",
+  description: "一个人也能维护的模版商品管理系统",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
         <header className="border-b border-gray-200 bg-white">
           <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
             <Link href="/" className="font-semibold text-gray-900">
-              商品站 V1
+              商品站首页
             </Link>
             <Link href="/products" className="text-gray-600 hover:text-gray-900">
               全部商品
@@ -30,12 +30,12 @@ export default function RootLayout({
               <Link href="/register" className="text-gray-600 hover:text-gray-900">
                 注册
               </Link>
-              <Link
+              {/* <Link
                 href="/admin"
                 className="rounded-md bg-gray-900 px-3 py-1.5 text-white hover:bg-gray-700"
               >
                 管理后台
-              </Link>
+              </Link> */}
             </div>
           </nav>
         </header>
