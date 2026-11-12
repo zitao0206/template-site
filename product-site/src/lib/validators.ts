@@ -17,6 +17,7 @@ export const productSchema = z.object({
   price: z.coerce.number().int("价格必须是整数（单位：分）").min(0, "价格不能为负"),
   imageUrl: z.string().trim().url("图片地址必须是完整 URL").optional().or(z.literal("")),
   status: z.enum(["DRAFT", "PUBLISHED"]).default("PUBLISHED"),
+  stock: z.number().int().min(0, "库存不能为负数"), // ✅新增这一行
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

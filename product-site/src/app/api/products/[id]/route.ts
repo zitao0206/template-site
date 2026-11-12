@@ -41,7 +41,7 @@ export async function PUT(req: Request, { params }: Ctx) {
     );
   }
 
-  const { title, description, price, imageUrl, status } = parsed.data;
+  const { title, description, price, stock, imageUrl, status } = parsed.data;
   try {
     const product = await prisma.product.update({
       where: { id },
@@ -49,6 +49,7 @@ export async function PUT(req: Request, { params }: Ctx) {
         title,
         description: description || null,
         price,
+        stock,
         imageUrl: imageUrl || null,
         status,
       },

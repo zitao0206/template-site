@@ -9,7 +9,7 @@ export default async function HomePage() {
     where: { status: "PUBLISHED" },
     orderBy: { createdAt: "desc" },
     take: 8,
-    select: { id: true, title: true, price: true, imageUrl: true },
+    select: { id: true, title: true, price: true, stock: true, imageUrl: true },
   });
 
   return (

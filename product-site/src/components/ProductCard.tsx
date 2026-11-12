@@ -2,12 +2,14 @@ export default function ProductCard({
   id,
   title,
   price,
+  stock,
   imageUrl,
   status,
 }: {
   id: number;
   title: string;
   price: number;
+  stock: number;
   imageUrl?: string | null;
   status?: string;
 }) {
@@ -32,11 +34,20 @@ export default function ProductCard({
         <span className="text-base font-semibold text-red-600">
           ¥{(price / 100).toFixed(2)}
         </span>
-        {status && status !== "PUBLISHED" && (
-          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
-            未上架
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {status && status !== "PUBLISHED" && (
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+              未上架
+            </span>
+          )}
+          {stock > 0 ? (
+            <span className="text-xs text-gray-500">库存:{stock}</span>
+          ) : (
+            <span className="rounded bg-red-100 px-2 py-0.5 text-xs text-red-600">
+              售罄
+            </span>
+          )}
+        </div>
       </div>
     </a>
   );

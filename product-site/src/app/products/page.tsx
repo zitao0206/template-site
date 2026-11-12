@@ -20,7 +20,7 @@ export default async function ProductsPage({
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: { id: true, title: true, price: true, imageUrl: true },
+      select: { id: true, title: true, stock: true, price: true, imageUrl: true },
     }),
   ]);
 

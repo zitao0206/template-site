@@ -30,6 +30,7 @@ export async function GET(req: Request) {
         id: true,
         title: true,
         price: true,
+        stock: true,
         imageUrl: true,
         status: true,
         createdAt: true,
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { title, description, price, imageUrl, status } = parsed.data;
+  const { title, description, price, imageUrl, status, stock } = parsed.data;
   const product = await prisma.product.create({
     data: {
       title,
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
       price,
       imageUrl: imageUrl || null,
       status,
+      stock, // ✅写入库存
     },
   });
 

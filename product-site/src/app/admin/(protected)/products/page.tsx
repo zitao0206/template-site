@@ -11,6 +11,7 @@ export default async function AdminProductsPage() {
       id: true,
       title: true,
       price: true,
+      stock: true, // ✅新增库存字段
       status: true,
       createdAt: true,
     },
@@ -36,6 +37,7 @@ export default async function AdminProductsPage() {
               <tr>
                 <th className="px-4 py-3">标题</th>
                 <th className="px-4 py-3">价格</th>
+                <th className="px-4 py-3">库存</th>
                 <th className="px-4 py-3">状态</th>
                 <th className="px-4 py-3">创建时间</th>
                 <th className="px-4 py-3 text-right">操作</th>
@@ -53,6 +55,7 @@ export default async function AdminProductsPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3">¥{(p.price / 100).toFixed(2)}</td>
+                  <td className="px-4 py-3">{p.stock}</td>
                   <td className="px-4 py-3">
                     {p.status === "PUBLISHED" ? (
                       <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-700">

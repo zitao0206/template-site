@@ -42,6 +42,17 @@ export default async function ProductDetailPage({
           <div className="text-3xl font-bold text-red-600">
             ¥{(product.price / 100).toFixed(2)}
           </div>
+          <div>
+            {product.stock > 5 ? (
+              <p className="text-gray-600">库存：{product.stock} 件</p>
+            ) : product.stock > 0 ? (
+              <p className="text-orange-500">库存紧张，仅剩 {product.stock} 件</p>
+            ) : (
+              <span className="inline-block px-2 py-1 bg-red-100 text-red-600 text-sm rounded">
+                售罄
+              </span>
+            )}
+          </div>
           <div className="whitespace-pre-wrap text-sm leading-6 text-gray-600">
             {product.description || "暂无描述"}
           </div>

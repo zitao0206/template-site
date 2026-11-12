@@ -12,7 +12,18 @@ export default async function EditProductPage({
   const id = Number(params.id);
   if (!Number.isInteger(id)) notFound();
 
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      price: true,
+      stock: true, // ✅ 显式指定拉取stock
+      imageUrl: true,
+      status: true,
+    },
+  });
   if (!product) notFound();
 
   return (
@@ -25,6 +36,7 @@ export default async function EditProductPage({
             title: product.title,
             description: product.description ?? "",
             priceYuan: (product.price / 100).toFixed(2),
+            stock: product.stock ?? "0",
             imageUrl: product.imageUrl ?? "",
             status: product.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
           }}

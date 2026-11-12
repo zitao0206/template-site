@@ -8,6 +8,7 @@ export type ProductFormValues = {
   title: string;
   description: string;
   priceYuan: string;
+  stock: string;
   imageUrl: string;
   status: "DRAFT" | "PUBLISHED";
 };
@@ -19,6 +20,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [priceYuan, setPriceYuan] = useState(initial?.priceYuan ?? "");
+  const [stock, setStock] = useState(initial?.stock ?? "");
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
   const [status, setStatus] = useState<"DRAFT" | "PUBLISHED">(
     initial?.status ?? "PUBLISHED",
@@ -38,6 +40,13 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
       return;
     }
 
+    // 库存校验 & 转数字
+    const stockNum = Number(stock);
+    if (!Number.isInteger(stockNum) || stockNum < 0) {
+      setError("库存必须填写大于等于0的整数");
+      return;
+    }
+
     setLoading(true);
     try {
       const url = isEdit ? `/api/products/${initial!.id}` : "/api/products";
@@ -48,6 +57,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
           title,
           description,
           price,
+          stock: stockNum,
           imageUrl,
           status,
         }),
@@ -92,6 +102,22 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
           required
         />
         <p className="mt-1 text-xs text-gray-400">内部按「分」存储，1 元 = 100</p>
+      </div>
+
+      {/* ✅ 新增库存输入框 */}
+      <div>
+        <label className="mb-1 block text-sm text-gray-600">库存数量 *</label>
+        <input
+          className="input"
+          type="number"
+          min="0"
+          step="1"
+          value={stock}
+          onChange={(e) => setStock(e.target.value)}
+          placeholder="0"
+          required
+        />
+        <p className="mt-1 text-xs text-gray-400">库存为0时，前台标记售罄</p>
       </div>
 
       <div>
