@@ -4,7 +4,7 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-sm">
       <h1 className="mb-1 text-xl font-semibold">用户注册</h1>
-      <p className="mb-6 text-sm text-gray-500">V1 只支持邮箱注册</p>
+      <p className="mb-6 text-sm text-gray-500">V1 暂时只支持邮箱注册</p>
       <div className="card">
         <RegisterForm />
       </div>

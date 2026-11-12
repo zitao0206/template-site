@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 页面挂载时，读取url里的email自动填充
+  useEffect(() => {
+    const prefillEmail = searchParams.get("email");
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
