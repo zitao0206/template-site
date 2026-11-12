@@ -1,0 +1,28 @@
+// V1 数据模型：用户 + 商品
+// 开发期用 SQLite（零安装，改文件即可跑）
+// 上线切 PostgreSQL 时：provider 改成 "postgresql"，DATABASE_URL 换成 pg 连接串
+// 注意：SQLite 不支持 enum，所以 status 用字符串 + 应用层校验（validators.ts）
+
+// prisma/product/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/product-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("PRODUCT_DATABASE_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  price       Int
+  imageUrl    String?
+  status      String   @default("PUBLISHED")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, createdAt])
+}

@@ -3,31 +3,21 @@
 // 上线切 PostgreSQL 时：provider 改成 "postgresql"，DATABASE_URL 换成 pg 连接串
 // 注意：SQLite 不支持 enum，所以 status 用字符串 + 应用层校验（validators.ts）
 
+// prisma/user/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
+  output   = "../../src/generated/user-client" // ★ 必须各自指定输出目录
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = env("USER_DATABASE_URL")
 }
 
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  password  String // bcrypt 哈希，绝不存明文
+  password  String
   createdAt DateTime @default(now())
-}
-
-model Product {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  price       Int // 单位：分，避免浮点误差
-  imageUrl    String?
-  status      String   @default("PUBLISHED") // "PUBLISHED" | "DRAFT"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([status, createdAt])
 }
