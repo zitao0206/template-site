@@ -1,0 +1,43 @@
+export default function ProductCard({
+  id,
+  title,
+  price,
+  imageUrl,
+  status,
+}: {
+  id: number;
+  title: string;
+  price: number;
+  imageUrl?: string | null;
+  status?: string;
+}) {
+  return (
+    <a
+      href={`/products/${id}`}
+      className="card block transition hover:border-blue-300 hover:shadow-md"
+    >
+      <div className="mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+        {imageUrl ? (
+          // V1 用外链图片；换成上传后可接自己的存储
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-gray-400">
+            暂无图片
+          </div>
+        )}
+      </div>
+      <h3 className="line-clamp-2 text-sm font-medium text-gray-900">{title}</h3>
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-base font-semibold text-red-600">
+          ¥{(price / 100).toFixed(2)}
+        </span>
+        {status && status !== "PUBLISHED" && (
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+            未上架
+          </span>
+        )}
+      </div>
+    </a>
+  );
+}
