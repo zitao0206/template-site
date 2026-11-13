@@ -36,7 +36,7 @@ export default async function EditProductPage({
             title: product.title,
             description: product.description ?? "",
             priceYuan: (product.price / 100).toFixed(2),
-            stock: product.stock ?? "0",
+            stock: String(product.stock),
             imageUrl: product.imageUrl ?? "",
             status: product.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
           }}

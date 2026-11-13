@@ -21,12 +21,6 @@ export default async function HomePage() {
         </p>
         <div className="mt-6 flex gap-3">
           <Link
-            href="/products"
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
-          >
-            开始浏览
-          </Link>
-          <Link
             href="/admin"
             className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
           >

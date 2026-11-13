@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import AddCartButton from "@/components/AddCartButton";
 
 export const dynamic = "force-dynamic";
 
@@ -58,17 +59,18 @@ export default async function ProductDetailPage({
             {product.description || "暂无描述"}
           </div>
 
-          {/* V2 在这里放：收藏 / 加入购物车 / 下单 */}
           <div className="flex gap-3">
-            <button className="btn-primary" disabled>
-              加入购物车（V2）
-            </button>
+            <AddCartButton
+              productId={product.id}
+              disabled={product.stock <= 0}
+              disabledText="已售罄"
+            />
             <button className="btn-ghost" disabled>
               收藏（V2）
             </button>
           </div>
           <p className="text-xs text-gray-400">
-            当前为 V1：只做浏览与展示，操作功能在第二版本开放。
+            加入购物车后可在右上角购物车查看，购物车与账号绑定。
           </p>
         </div>
       </div>

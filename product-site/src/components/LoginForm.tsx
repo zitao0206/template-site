@@ -37,7 +37,13 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
         return;
       }
       window.dispatchEvent(new Event("auth:updated"));
-      router.push(mode === "admin" ? "/admin" : "/user");
+      // 支持 ?redirect=/cart 这类内部跳转（只允许站内路径，防开放重定向）
+      const rawRedirect = searchParams.get("redirect");
+      const safeRedirect =
+        rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+          ? rawRedirect
+          : null;
+      router.push(mode === "admin" ? "/admin" : safeRedirect ?? "/user");
       router.refresh();
     } catch {
       setError("网络异常，请重试");
