@@ -98,3 +98,15 @@ export const orderActionSchema = z.discriminatedUnion("action", [
       .max(40, "发货单号最多 40 位"),
   }),
 ]);
+
+// 超级管理员登录（账号不是邮箱，单独一套规则）
+export const superLoginSchema = z.object({
+  account: z.string().trim().min(1, "请输入账号"),
+  password: z.string().min(1, "请输入密码"),
+});
+
+// 超级管理员维护管理员账号：新增 / 编辑
+export const adminAccountSchema = z.object({
+  email: z.string().trim().email("邮箱格式不正确"),
+  password: z.string().min(6, "密码至少 6 位").max(64, "密码太长").optional(),
+});

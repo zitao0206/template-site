@@ -1,9 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 
 export type SessionPayload = {
-  uid: number | null; // 普通用户有 uid；管理员为 null（写死账号，不进库）
+  uid: number | null; // 普通用户有 uid；管理员/超级管理员为 null
   email: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "super";
 };
 
 const secret = new TextEncoder().encode(

@@ -19,12 +19,18 @@ export default async function HomePage() {
         <p className="mt-2 text-sm text-blue-100">
           管理员发布商品 → 存数据库 → 用户浏览挑选 → 进详情页
         </p>
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/admin"
             className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
           >
             管理后台入口
+          </Link>
+          <Link
+            href="/super/login"
+            className="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20"
+          >
+            超级管理入口
           </Link>
         </div>
       </section>

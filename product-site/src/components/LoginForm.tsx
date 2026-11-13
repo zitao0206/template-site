@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
+type Mode = "user" | "admin" | "super";
+
+export default function LoginForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -25,11 +27,18 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
     setError("");
     setLoading(true);
     try {
-      const url = mode === "admin" ? "/api/admin/login" : "/api/auth/login";
+      const url =
+        mode === "super"
+          ? "/api/super/login"
+          : mode === "admin"
+            ? "/api/admin/login"
+            : "/api/auth/login";
+      const payload =
+        mode === "super" ? { account: email, password } : { email, password };
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -43,7 +52,8 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
         rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
           ? rawRedirect
           : null;
-      router.push(mode === "admin" ? "/admin" : safeRedirect ?? "/user");
+      const home = mode === "super" ? "/super" : mode === "admin" ? "/admin" : "/user";
+      router.push(safeRedirect ?? home);
       router.refresh();
     } catch {
       setError("网络异常，请重试");
@@ -55,13 +65,21 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className="mb-1 block text-sm text-gray-600">邮箱</label>
+        <label className="mb-1 block text-sm text-gray-600">
+          {mode === "super" ? "账号" : "邮箱"}
+        </label>
         <input
           className="input"
-          type="email"
+          type={mode === "super" ? "text" : "email"}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder={mode === "admin" ? "管理员邮箱" : "you@example.com"}
+          placeholder={
+            mode === "super"
+              ? "超级管理员账号"
+              : mode === "admin"
+                ? "管理员邮箱"
+                : "you@example.com"
+          }
           required
         />
       </div>
@@ -72,7 +90,7 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="至少 6 位"
+          placeholder={mode === "super" ? "超级管理员密码" : "至少 6 位"}
           required
         />
       </div>

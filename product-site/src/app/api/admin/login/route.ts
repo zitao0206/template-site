@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { loginSchema } from "@/lib/validators";
+import { prisma } from "@/lib/prisma";
 import { signSession } from "@/lib/jwt";
 import { TOKEN_COOKIE } from "@/lib/session";
 
-// POST /api/admin/login  管理员登录（账号密码写死在环境变量，不进数据库）
+// POST /api/admin/login  管理员登录
+// 1) 内置管理员：.env 里的 ADMIN_EMAIL + ADMIN_PASSWORD_HASH
+// 2) 数据库管理员：超级管理员在后台添加的账号（Admin 表）
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = loginSchema.safeParse(body);
@@ -18,22 +21,18 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminHash = process.env.ADMIN_PASSWORD_HASH;
-  // 👇 新增两行日志，看终端输出
-  // console.log("adminEmail:", adminEmail);
-  // console.log("adminHash raw:", adminHash);
 
-  if (!adminEmail || !adminHash) {
-    return NextResponse.json(
-      { error: "服务端未配置管理员账号，请先在 .env 填写 ADMIN_EMAIL / ADMIN_PASSWORD_HASH" },
-      { status: 500 },
-    );
+  let ok = false;
+
+  if (adminEmail && adminHash && email === adminEmail) {
+    ok = await bcrypt.compare(password, adminHash);
+  } else {
+    const dbAdmin = await prisma.admin.findUnique({ where: { email } });
+    if (dbAdmin) {
+      ok = await bcrypt.compare(password, dbAdmin.password);
+    }
   }
 
-  // 邮箱不匹配直接拒绝；再比哈希
-  if (email !== adminEmail) {
-    return NextResponse.json({ error: "账号或密码错误" }, { status: 401 });
-  }
-  const ok = await bcrypt.compare(password, adminHash);
   if (!ok) {
     return NextResponse.json({ error: "账号或密码错误" }, { status: 401 });
   }

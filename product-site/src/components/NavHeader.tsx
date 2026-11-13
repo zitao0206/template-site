@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 type User = {
   uid: number | null;
   email: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "super";
 } | null;
 
 export default function NavHeader() {
@@ -16,8 +16,10 @@ export default function NavHeader() {
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
 
-  // 管理员是写死账号，没有购物车，右上角不显示购物车入口
+  // 管理员/超级管理员都没有购物车，右上角不显示购物车入口
   const isAdmin = user?.role === "admin";
+  const isSuper = user?.role === "super";
+  const isStaff = isAdmin || isSuper;
 
   // 购物车角标：显示商品种类数（同一商品买多件只算 1 种）
   const fetchCartCount = async () => {
@@ -40,8 +42,8 @@ export default function NavHeader() {
       if (res.ok) {
         const u = await res.json();
         setUser(u);
-        // 只有普通用户才拉购物车：管理员没有购物车，未登录会 401
-        if (u?.role === "admin") {
+        // 只有普通用户才拉购物车：管理员/超级管理员没有购物车，未登录会 401
+        if (u?.role === "admin" || u?.role === "super") {
           setCartCount(0);
         } else {
           await fetchCartCount();
@@ -103,7 +105,7 @@ export default function NavHeader() {
 
         <div className="ml-auto flex items-center gap-3">
           {/* 我的订单入口：在购物车左边；登录用户可见，管理员走后台 */}
-          {!loading && user && !isAdmin && (
+          {!loading && user && !isStaff && (
             <Link
               href="/orders"
               className="text-gray-600 transition hover:text-gray-900"
@@ -113,7 +115,7 @@ export default function NavHeader() {
           )}
 
           {/* 购物车入口：图标 + 种类角标；管理员账号不显示 */}
-          {!loading && !isAdmin && (
+          {!loading && !isStaff && (
             <button
               type="button"
               onClick={goCart}
@@ -159,8 +161,8 @@ export default function NavHeader() {
               {/* 邮箱改成按钮：普通用户进个人资料，管理员进后台 */}
               <button
                 type="button"
-                onClick={() => router.push(isAdmin ? "/admin" : "/profile")}
-                title={isAdmin ? "进入后台" : "查看个人资料"}
+                onClick={() => router.push(isSuper ? "/super" : isAdmin ? "/admin" : "/profile")}
+                title={isSuper ? "进入超级管理" : isAdmin ? "进入后台" : "查看个人资料"}
                 className="max-w-[160px] truncate rounded-md px-2 py-1 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
               >
                 {user.email}
