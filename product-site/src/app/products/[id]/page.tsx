@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 import AddCartButton from "@/components/AddCartButton";
+import BackButton from "@/components/BackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,16 @@ export default async function ProductDetailPage({
   const id = Number(params.id);
   if (!Number.isInteger(id)) notFound();
 
+  const session = await getSession();
+  const isStaff = session?.role === "admin" || session?.role === "super";
+
   const product = await prisma.product.findUnique({ where: { id } });
-  if (!product || product.status !== "PUBLISHED") notFound();
+  // 未上架的商品只有管理员能看到（从商品管理点标题进来不会 404）
+  if (!product || (product.status !== "PUBLISHED" && !isStaff)) notFound();
 
   return (
     <div className="space-y-6">
-      <Link href="/products" className="text-sm text-gray-500 hover:text-gray-900">
-        ← 返回列表
-      </Link>
+      <BackButton fallback={isStaff ? "/admin/products" : "/products"} />
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
@@ -39,7 +42,14 @@ export default async function ProductDetailPage({
         </div>
 
         <div className="space-y-4">
-          <h1 className="text-2xl font-semibold">{product.title}</h1>
+          <h1 className="text-2xl font-semibold">
+            {product.title}
+            {product.status !== "PUBLISHED" && (
+              <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700">
+                草稿
+              </span>
+            )}
+          </h1>
           {/* 价格和库存标签同行，和你截图样式对齐 */}
           <div className="flex items-center gap-3">
             <div className="text-3xl font-bold text-red-600">
@@ -59,10 +69,15 @@ export default async function ProductDetailPage({
             {product.description || "暂无描述"}
           </div>
 
-          <AddCartButton productId={product.id} stock={product.stock} />
-          <p className="text-xs text-gray-400">
-            加入购物车后可在右上角购物车查看，购物车与账号绑定。
-          </p>
+          {/* 管理员视角只看商品信息，不显示数量加减/加入购物车/立即购买 */}
+          {!isStaff && (
+            <>
+              <AddCartButton productId={product.id} stock={product.stock} />
+              <p className="text-xs text-gray-400">
+                加入购物车后可在右上角购物车查看，购物车与账号绑定。
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

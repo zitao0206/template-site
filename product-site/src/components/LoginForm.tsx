@@ -52,7 +52,8 @@ export default function LoginForm({ mode }: { mode: Mode }) {
         rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
           ? rawRedirect
           : null;
-      const home = mode === "super" ? "/super" : mode === "admin" ? "/admin" : "/user";
+      // 普通用户登录成功后直接落在首页的商品列表（最新上架）
+      const home = mode === "super" ? "/super" : mode === "admin" ? "/admin" : "/";
       router.push(safeRedirect ?? home);
       router.refresh();
     } catch {
