@@ -20,6 +20,8 @@ model User {
 
   // 购物车反向关联
   cartItems CartItem[]
+  // 订单反向关联
+  orders    Order[]
 }
 
 model Product {
@@ -27,16 +29,18 @@ model Product {
   title       String
   description String?
   price       Int // 单位：分，避免浮点误差
-  stock       Int      @default(0)  // ✅新增库存，默认0
+  stock       Int      @default(0) // ✅新增库存，默认0
   imageUrl    String?
   status      String   @default("PUBLISHED") // "PUBLISHED" | "DRAFT"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([status, createdAt])
-
   // 购物车反向关联
-  cartItems CartItem[]
+  cartItems  CartItem[]
+  // 订单明细反向关联
+  orderItems OrderItem[]
+
+  @@index([status, createdAt])
 }
 
 model CartItem {
@@ -52,4 +56,35 @@ model CartItem {
 
   // 同一个用户+同一个商品只能一条购物车记录
   @@unique([userId, productId])
+}
+
+// 订单：V3.0.3 起支付成功即落库（真实支付回调在 V4.0 接入）
+// status: "PAID"（已支付）；V4 可扩 "PENDING" / "CANCELLED" / "SHIPPED"
+model Order {
+  id          Int      @id @default(autoincrement())
+  orderNo     String   @unique
+  userId      Int
+  totalAmount Int // 单位：分，下单时的实付金额
+  status      String   @default("PAID")
+  createdAt   DateTime @default(now())
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@index([userId, createdAt])
+}
+
+// 订单明细：冗余存 title / price 快照，商品后续改价改名不影响历史订单
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  title     String
+  price     Int // 单位：分
+  quantity  Int
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
 }

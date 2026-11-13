@@ -1,0 +1,103 @@
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+function formatTime(date: Date) {
+  return new Date(date).toLocaleString("zh-CN", { hour12: false });
+}
+
+// 管理员：全部订单
+export default async function AdminOrdersPage() {
+  const orders = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      items: true,
+      user: { select: { email: true } },
+    },
+  });
+
+  const paidOrders = orders.filter((o) => o.status === "PAID");
+  const totalAmount = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalQty = orders.reduce(
+    (sum, o) => sum + o.items.reduce((s, it) => s + it.quantity, 0),
+    0,
+  );
+
+  const stats = [
+    { label: "订单总数", value: orders.length },
+    { label: "已支付金额", value: `¥${(totalAmount / 100).toFixed(2)}` },
+    { label: "售出件数", value: totalQty },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">订单管理</h1>
+
+      <div className="grid grid-cols-3 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="card">
+            <div className="text-sm text-gray-500">{s.label}</div>
+            <div className="mt-1 text-2xl font-semibold">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {orders.length === 0 ? (
+        <div className="card text-sm text-gray-500">还没有任何订单。</div>
+      ) : (
+        <ul className="space-y-4">
+          {orders.map((order) => (
+            <li key={order.id} className="card space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 text-sm">
+                <div className="text-gray-500">
+                  订单号{" "}
+                  <span className="font-mono text-gray-900">{order.orderNo}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-gray-600">{order.user.email}</span>
+                  <span className="text-gray-400">{formatTime(order.createdAt)}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${
+                      order.status === "PAID"
+                        ? "bg-green-50 text-green-600"
+                        : "bg-amber-50 text-amber-600"
+                    }`}
+                  >
+                    {order.status === "PAID" ? "已支付" : order.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {order.items.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                    <Link
+                      href={`/products/${item.productId}`}
+                      className="min-w-0 flex-1 truncate text-gray-900 hover:underline"
+                    >
+                      {item.title}
+                    </Link>
+                    <span className="text-gray-500">
+                      ¥{(item.price / 100).toFixed(2)} × {item.quantity}
+                    </span>
+                    <span className="w-20 text-right font-medium text-gray-900">
+                      ¥{((item.price * item.quantity) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-3 text-sm">
+                <span className="text-gray-500">合计</span>
+                <span className="text-lg font-semibold text-red-600">
+                  ¥{(order.totalAmount / 100).toFixed(2)}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

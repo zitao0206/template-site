@@ -7,6 +7,7 @@ const navItems = [
   { label: "概览", href: "/admin" },
   { label: "商品管理", href: "/admin/products" },
   { label: "发布商品", href: "/admin/products/new" },
+  { label: "订单管理", href: "/admin/orders" },
 ];
 
 export default function AdminNav() {

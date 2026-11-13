@@ -102,6 +102,16 @@ export default function NavHeader() {
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
+          {/* 我的订单入口：在购物车左边；登录用户可见，管理员走后台 */}
+          {!loading && user && !isAdmin && (
+            <Link
+              href="/orders"
+              className="text-gray-600 transition hover:text-gray-900"
+            >
+              我的订单
+            </Link>
+          )}
+
           {/* 购物车入口：图标 + 种类角标；管理员账号不显示 */}
           {!loading && !isAdmin && (
             <button

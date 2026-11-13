@@ -3,10 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/session";
 import { orderPaySchema } from "@/lib/validators";
 
-// POST /api/orders/pay  模拟支付成功后的结算
-// - 扣减订单商品的库存（事务内带 stock >= quantity 守卫，避免超卖/负数）
-// - 来自购物车的订单：按件数扣减购物车条目，减到 0 删除
-// V4.0 接入真实支付后，这段逻辑挪到支付回调里执行
+// POST /api/orders/pay  支付成功后的结算（V3.0.3 起订单落库）
+// 事务内一次完成：扣库存 → 写订单 + 明细 →（购物车来源）清已结算条目
+// 同一订单号重复提交直接返回已有订单，不会二次扣库存
 export async function POST(req: Request) {
   const session = await readSession(req);
   if (!session) {
@@ -28,13 +27,41 @@ export async function POST(req: Request) {
   const { orderNo, items, fromCart } = parsed.data;
   const userId = session.uid;
 
+  // 幂等：订单号已存在（重复点击/刷新重付）直接返回，不再扣库存
+  const existing = await prisma.order.findUnique({ where: { orderNo } });
+  if (existing) {
+    return NextResponse.json({
+      ok: true,
+      duplicated: true,
+      orderNo,
+      orderId: existing.id,
+      totalAmount: existing.totalAmount,
+    });
+  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
+      const linesData: Array<{
+        productId: number;
+        title: string;
+        price: number;
+        quantity: number;
+      }> = [];
+      let totalAmount = 0;
       let removed = 0;
       let updated = 0;
 
       for (const line of items) {
-        // 库存守卫：库存不足或商品下架时这一条更新 0 行
+        const product = await tx.product.findUnique({ where: { id: line.productId } });
+        if (
+          !product ||
+          product.status !== "PUBLISHED" ||
+          product.stock < line.quantity
+        ) {
+          throw new Error(`STOCK:${line.productId}`);
+        }
+
+        // 库存守卫：条件更新，避免并发下单扣成负数
         const stockUpdate = await tx.product.updateMany({
           where: {
             id: line.productId,
@@ -46,6 +73,14 @@ export async function POST(req: Request) {
         if (stockUpdate.count === 0) {
           throw new Error(`STOCK:${line.productId}`);
         }
+
+        totalAmount += product.price * line.quantity;
+        linesData.push({
+          productId: product.id,
+          title: product.title,
+          price: product.price,
+          quantity: line.quantity,
+        });
 
         // 购物车来源：按件数扣减，保留用户没结算的部分
         if (fromCart) {
@@ -68,7 +103,22 @@ export async function POST(req: Request) {
         }
       }
 
-      return { removed, updated };
+      const order = await tx.order.create({
+        data: {
+          orderNo,
+          userId,
+          totalAmount,
+          status: "PAID",
+          items: { create: linesData },
+        },
+      });
+
+      return {
+        orderId: order.id,
+        totalAmount,
+        removed,
+        updated,
+      };
     });
 
     return NextResponse.json({ ok: true, orderNo, ...result });

@@ -148,6 +148,10 @@ export default function PayClient({
             <p className="text-xs text-gray-500">已把本次结算的商品从购物车移除。</p>
           )}
           <div className="flex flex-wrap items-center justify-center gap-3">
+            {/* 订单已落库，这里给硬跳转，保证看到刚生成的订单 */}
+            <a href="/orders" className="btn-primary">
+              查看订单
+            </a>
             {/* 支付后库存已变化：这里用原生 <a> 硬跳转，绕过 Next 客户端路由缓存，
                 否则会拿到支付前的旧快照，详情页库存看起来没变 */}
             {lines.length === 1 && (
@@ -160,7 +164,7 @@ export default function PayClient({
                 返回购物车
               </a>
             )}
-            <a href="/products" className="btn-primary">
+            <a href="/products" className="btn-ghost">
               继续购物
             </a>
           </div>
