@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/session";
 import { cartAddSchema } from "@/lib/validators";
 
-// POST /api/cart/add  加入购物车（重复加入 = 数量 +1）
+// POST /api/cart/add  加入购物车
+// body: { productId, quantity? }  不传 quantity 默认加 1 件，支持在详情页一次加多件
 export async function POST(req: Request) {
   const session = await readSession(req);
   if (!session) {
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { productId } = parsed.data;
+  const { productId, quantity } = parsed.data;
 
   // 只能加已上架、还有库存的商品
   const product = await prisma.product.findUnique({
@@ -34,15 +35,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "商品已售罄" }, { status: 400 });
   }
 
-  // 同一个用户 + 同一个商品只有一条记录，重复加就是数量 +1
+  // 同一个用户 + 同一个商品只有一条记录，本次是在已有数量上累加
   const existing = await prisma.cartItem.findUnique({
     where: {
       userId_productId: { userId: session.uid, productId },
     },
   });
-  if (existing && existing.quantity >= product.stock) {
+  const current = existing?.quantity ?? 0;
+  const target = current + quantity;
+
+  if (target > product.stock) {
     return NextResponse.json(
-      { error: `库存不足，最多只能买 ${product.stock} 件` },
+      {
+        error: `库存不足：库存 ${product.stock} 件，购物车已有 ${current} 件`,
+      },
       { status: 400 },
     );
   }
@@ -51,14 +57,8 @@ export async function POST(req: Request) {
     where: {
       userId_productId: { userId: session.uid, productId },
     },
-    update: {
-      quantity: { increment: 1 },
-    },
-    create: {
-      userId: session.uid,
-      productId,
-      quantity: 1,
-    },
+    update: { quantity: target },
+    create: { userId: session.uid, productId, quantity: target },
   });
 
   return NextResponse.json({ ok: true, quantity: item.quantity });

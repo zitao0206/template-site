@@ -33,11 +33,13 @@ export async function GET(req: Request) {
 
   // 已下架的条目仍然返回（前端可以标"已下架"），但不计入角标和金额
   const validItems = items.filter((item) => item.product.status === "PUBLISHED");
+  // itemCount = 商品种类数（不同商品各算 1），导航栏角标用它
+  const itemCount = validItems.length;
   const totalQuantity = validItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = validItems.reduce(
     (sum, item) => sum + item.quantity * item.product.price,
     0,
   );
 
-  return NextResponse.json({ items, totalQuantity, totalPrice });
+  return NextResponse.json({ items, itemCount, totalQuantity, totalPrice });
 }

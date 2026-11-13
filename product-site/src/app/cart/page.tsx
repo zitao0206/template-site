@@ -17,9 +17,19 @@ type CartItem = {
   };
 };
 
+// 能否勾选参与下单：已上架 + 有库存 + 购物车数量没超过库存
+function isSelectable(item: CartItem) {
+  return (
+    item.product.status === "PUBLISHED" &&
+    item.product.stock > 0 &&
+    item.quantity <= item.product.stock
+  );
+}
+
 export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
+  const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pendingId, setPendingId] = useState<number | null>(null);
@@ -38,7 +48,16 @@ export default function CartPage() {
         setItems([]);
         return;
       }
-      setItems(data.items ?? []);
+      const list: CartItem[] = data.items ?? [];
+      setItems(list);
+      // 新条目默认勾选；不可下单的（下架/售罄/库存不足）强制取消勾选
+      setSelected((prev) => {
+        const next: Record<number, boolean> = {};
+        for (const it of list) {
+          next[it.id] = isSelectable(it) ? (prev[it.id] ?? true) : false;
+        }
+        return next;
+      });
     } catch {
       setError("网络异常，请刷新重试");
     } finally {
@@ -50,6 +69,11 @@ export default function CartPage() {
     loadCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const toggleSelect = (item: CartItem) => {
+    if (!isSelectable(item)) return;
+    setSelected((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+  };
 
   const changeQty = async (item: CartItem, quantity: number) => {
     setError("");
@@ -86,6 +110,11 @@ export default function CartPage() {
         return;
       }
       setItems((prev) => prev.filter((it) => it.id !== item.id));
+      setSelected((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
+      });
       window.dispatchEvent(new Event("cart:updated"));
     } catch {
       setError("网络异常，请重试");
@@ -94,13 +123,19 @@ export default function CartPage() {
     }
   };
 
-  // 只对已上架商品计算合计
-  const totalCount = items
-    .filter((it) => it.product.status === "PUBLISHED")
-    .reduce((sum, it) => sum + it.quantity, 0);
-  const totalPrice = items
-    .filter((it) => it.product.status === "PUBLISHED")
-    .reduce((sum, it) => sum + it.quantity * it.product.price, 0);
+  // 只统计已上架商品（导航栏角标同口径）
+  const validItems = items.filter((it) => it.product.status === "PUBLISHED");
+  const typeCount = validItems.length;
+  const totalCount = validItems.reduce((sum, it) => sum + it.quantity, 0);
+
+  // 下单合计只看勾选的商品
+  const selectedItems = items.filter((it) => selected[it.id] && isSelectable(it));
+  const selectedTypeCount = selectedItems.length;
+  const selectedCount = selectedItems.reduce((sum, it) => sum + it.quantity, 0);
+  const selectedPrice = selectedItems.reduce(
+    (sum, it) => sum + it.quantity * it.product.price,
+    0,
+  );
 
   if (loading) {
     return <p className="text-sm text-gray-500">正在加载购物车…</p>;
@@ -112,7 +147,7 @@ export default function CartPage() {
         <div>
           <h1 className="text-xl font-semibold">我的购物车</h1>
           <p className="mt-1 text-sm text-gray-500">
-            购物车与当前登录账号绑定，共 {totalCount} 件商品。
+            购物车与当前登录账号绑定，共 {typeCount} 种商品、{totalCount} 件。
           </p>
         </div>
         <Link href="/products" className="text-sm text-gray-500 hover:text-gray-900">
@@ -137,13 +172,43 @@ export default function CartPage() {
             {items.map((item) => {
               const offline = item.product.status !== "PUBLISHED";
               const soldOut = item.product.stock <= 0;
+              const overStock =
+                !offline && !soldOut && item.quantity > item.product.stock;
+              const selectable = isSelectable(item);
               const busy = pendingId === item.id;
+              const checked = Boolean(selected[item.id]);
+
+              const disabledReason = offline
+                ? "商品已下架，无法选择"
+                : soldOut
+                  ? "商品已售罄，无法选择"
+                  : `库存不足（仅剩 ${item.product.stock} 件），暂不可选择`;
 
               return (
-                <li key={item.id} className="card flex flex-col gap-4 sm:flex-row sm:items-center">
+                <li
+                  key={item.id}
+                  className="card flex flex-col gap-4 sm:flex-row sm:items-center"
+                >
+                  {/* 最左侧：勾选框；下架/售罄/库存不足时灰掉不可点 */}
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!selectable || busy}
+                      onChange={() => toggleSelect(item)}
+                      aria-label={`选择 ${item.product.title}`}
+                      title={selectable ? "勾选后可参与下单" : disabledReason}
+                      className={`h-4 w-4 cursor-pointer accent-blue-600 disabled:cursor-not-allowed disabled:opacity-40 ${
+                        selectable ? "" : "accent-gray-300"
+                      }`}
+                    />
+                  </div>
+
                   <Link
                     href={`/products/${item.product.id}`}
-                    className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100"
+                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100 ${
+                      selectable ? "" : "opacity-60"
+                    }`}
                   >
                     {item.product.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -178,11 +243,17 @@ export default function CartPage() {
                           已售罄
                         </span>
                       )}
-                      {!offline && !soldOut && item.quantity >= item.product.stock && (
-                        <span className="text-xs text-gray-400">
-                          已到库存上限
+                      {overStock && (
+                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-600">
+                          库存不足，仅剩 {item.product.stock} 件
                         </span>
                       )}
+                      {!offline &&
+                        !soldOut &&
+                        !overStock &&
+                        item.quantity >= item.product.stock && (
+                          <span className="text-xs text-gray-400">已到库存上限</span>
+                        )}
                     </div>
                   </div>
 
@@ -211,7 +282,11 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  <div className="w-24 text-right text-sm font-semibold text-red-600">
+                  <div
+                    className={`w-24 text-right text-sm font-semibold ${
+                      selectable ? "text-red-600" : "text-gray-400"
+                    }`}
+                  >
                     ¥{((item.product.price * item.quantity) / 100).toFixed(2)}
                   </div>
 
@@ -230,12 +305,22 @@ export default function CartPage() {
 
           <div className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-gray-500">
-              共 {totalCount} 件，合计
-              <span className="ml-2 text-lg font-semibold text-red-600">
-                ¥{(totalPrice / 100).toFixed(2)}
-              </span>
+              {selectedTypeCount > 0 ? (
+                <>
+                  已选 {selectedTypeCount} 种、{selectedCount} 件，合计
+                  <span className="ml-2 text-lg font-semibold text-red-600">
+                    ¥{(selectedPrice / 100).toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                "请先勾选要下单的商品"
+              )}
             </div>
-            <button className="btn-primary" disabled title="下单功能后续版本开放">
+            <button
+              className="btn-primary"
+              disabled
+              title={selectedTypeCount > 0 ? "下单功能后续版本开放" : "请先勾选商品"}
+            >
               去结算（V2）
             </button>
           </div>

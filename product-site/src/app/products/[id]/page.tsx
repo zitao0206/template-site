@@ -59,16 +59,7 @@ export default async function ProductDetailPage({
             {product.description || "暂无描述"}
           </div>
 
-          <div className="flex gap-3">
-            <AddCartButton
-              productId={product.id}
-              disabled={product.stock <= 0}
-              disabledText="已售罄"
-            />
-            <button className="btn-ghost" disabled>
-              收藏（V2）
-            </button>
-          </div>
+          <AddCartButton productId={product.id} stock={product.stock} />
           <p className="text-xs text-gray-400">
             加入购物车后可在右上角购物车查看，购物车与账号绑定。
           </p>

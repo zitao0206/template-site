@@ -22,9 +22,15 @@ export const productSchema = z.object({
 
 export type ProductInput = z.infer<typeof productSchema>;
 
-// 购物车：加入时只需要商品 id
+// 购物车：加入时可以带数量，不传默认 1
 export const cartAddSchema = z.object({
   productId: z.coerce.number().int("商品 id 必须是整数").positive("商品 id 不合法"),
+  quantity: z.coerce
+    .number()
+    .int("数量必须是整数")
+    .min(1, "数量至少为 1")
+    .max(999, "单次最多加 999 件")
+    .default(1),
 });
 
 // 购物车：改数量，最小 1（要清空请走删除接口）

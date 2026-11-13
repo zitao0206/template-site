@@ -16,7 +16,7 @@ export default function NavHeader() {
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
 
-  // 购物车角标：只统计已上架商品的总件数
+  // 购物车角标：显示商品种类数（同一商品买多件只算 1 种）
   const fetchCartCount = async () => {
     try {
       const res = await fetch("/api/cart", { cache: "no-store" });
@@ -25,7 +25,7 @@ export default function NavHeader() {
         return;
       }
       const data = await res.json();
-      setCartCount(data.totalQuantity ?? 0);
+      setCartCount(data.itemCount ?? data.items?.length ?? 0);
     } catch {
       setCartCount(0);
     }
@@ -99,7 +99,7 @@ export default function NavHeader() {
           <button
             type="button"
             onClick={goCart}
-            aria-label={cartCount > 0 ? `购物车，共 ${cartCount} 件` : "购物车"}
+            aria-label={cartCount > 0 ? `购物车，共 ${cartCount} 种商品` : "购物车"}
             className="relative rounded-full p-1.5 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
           >
             <svg
