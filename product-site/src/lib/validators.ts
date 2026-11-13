@@ -38,8 +38,10 @@ export const cartQuantitySchema = z.object({
   quantity: z.coerce.number().int("数量必须是整数").min(1, "数量至少为 1"),
 });
 
-// 购物车：支付成功后按结算明细清理（数量可能因库存被下调，所以按件数扣减）
-export const cartSettleSchema = z.object({
+// 支付成功结算：扣库存 + （购物车来源时）清理已结算条目
+export const orderPaySchema = z.object({
+  orderNo: z.string().trim().min(1, "缺少订单号").max(64, "订单号太长"),
+  fromCart: z.boolean().default(false),
   items: z
     .array(
       z.object({

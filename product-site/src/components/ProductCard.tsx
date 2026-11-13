@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ProductCard({
   id,
   title,
@@ -14,8 +16,11 @@ export default function ProductCard({
   status?: string;
 }) {
   return (
-    <a
+    // 用 next/link 而不是原生 <a>：原生 <a> 是整页跳转，dev 首次编译详情页时
+    // 旧页面会一直停着，看起来像"点了没反应"，第二次（已编译）才正常
+    <Link
       href={`/products/${id}`}
+      prefetch
       className="card block transition hover:border-blue-300 hover:shadow-md"
     >
       <div className="mb-3 aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
@@ -49,6 +54,6 @@ export default function ProductCard({
           )}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }

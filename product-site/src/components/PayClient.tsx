@@ -62,7 +62,7 @@ export default function PayClient({
   const [left, setLeft] = useState(15 * 60);
   const [paid, setPaid] = useState(false);
   const [paying, setPaying] = useState(false);
-  const [settleWarning, setSettleWarning] = useState("");
+  const [payError, setPayError] = useState("");
 
   const total = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
   const totalQty = lines.reduce((sum, l) => sum + l.quantity, 0);
@@ -78,32 +78,37 @@ export default function PayClient({
 
   const expired = left <= 0;
 
-  // 支付成功后：来自购物车的订单要清掉已结算条目
+  // 模拟支付：服务端扣库存 +（购物车来源）清已结算条目，成功后才进入成功态
   const confirmPay = async () => {
     if (expired || paying) return;
     setPaying(true);
+    setPayError("");
     try {
-      if (fromCart) {
-        const res = await fetch("/api/cart/settle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items: lines.map((l) => ({ productId: l.id, quantity: l.quantity })),
-          }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => null);
-          setSettleWarning(data?.error ?? "购物车清理失败，请到购物车手动删除");
-        } else {
-          // 通知导航栏刷新角标
-          window.dispatchEvent(new Event("cart:updated"));
-        }
+      const res = await fetch("/api/orders/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNo,
+          fromCart,
+          items: lines.map((l) => ({ productId: l.id, quantity: l.quantity })),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setPayError(data?.error ?? "支付失败，请重试");
+        return;
       }
+
+      // 库存与购物车都由服务端处理完了，这里只负责刷新角标和切成功态
+      if (fromCart) {
+        window.dispatchEvent(new Event("cart:updated"));
+      }
+      setPaid(true);
     } catch {
-      setSettleWarning("购物车清理失败，请到购物车手动删除");
+      setPayError("网络异常，支付未完成，请重试");
     } finally {
       setPaying(false);
-      setPaid(true);
     }
   };
 
@@ -139,28 +144,25 @@ export default function PayClient({
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
             当前为 V3.0 演示收银台，真实支付与订单落库将在 V4.0 接入。
           </p>
-          {fromCart && !settleWarning && (
+          {fromCart && (
             <p className="text-xs text-gray-500">已把本次结算的商品从购物车移除。</p>
           )}
-          {settleWarning && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
-              {settleWarning}
-            </p>
-          )}
           <div className="flex flex-wrap items-center justify-center gap-3">
+            {/* 支付后库存已变化：这里用原生 <a> 硬跳转，绕过 Next 客户端路由缓存，
+                否则会拿到支付前的旧快照，详情页库存看起来没变 */}
             {lines.length === 1 && (
-              <Link href={`/products/${lines[0].id}`} className="btn-ghost">
+              <a href={`/products/${lines[0].id}`} className="btn-ghost">
                 返回商品
-              </Link>
+              </a>
             )}
             {fromCart && (
-              <Link href="/cart" className="btn-ghost">
+              <a href="/cart" className="btn-ghost">
                 返回购物车
-              </Link>
+              </a>
             )}
-            <Link href="/products" className="btn-primary">
+            <a href="/products" className="btn-primary">
               继续购物
-            </Link>
+            </a>
           </div>
         </div>
       ) : (
@@ -280,6 +282,12 @@ export default function PayClient({
               </div>
             )}
 
+            {payError && (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                {payError}
+              </p>
+            )}
+
             <button
               type="button"
               onClick={confirmPay}
@@ -294,7 +302,7 @@ export default function PayClient({
             </button>
 
             <p className="text-center text-xs text-gray-400">
-              V3.0 演示收银台：点击支付会直接模拟成功，不产生真实扣款。
+              V3.0 演示收银台：点击支付会模拟成功，同时按订单数量扣减库存。
             </p>
           </div>
 

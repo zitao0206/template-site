@@ -147,7 +147,7 @@ export default function CartPage() {
         quantity: it.quantity,
       })),
     );
-    router.push(`/pay?orderNo=${makeOrderNo()}&items=${items}`);
+    router.push(`/pay?orderNo=${makeOrderNo()}&items=${items}&from=cart`);
   };
 
   if (loading) {
