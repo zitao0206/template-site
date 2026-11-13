@@ -36,6 +36,7 @@ export default function LoginForm({ mode }: { mode: "user" | "admin" }) {
         setError(data.error ?? "登录失败");
         return;
       }
+      window.dispatchEvent(new Event("auth:updated"));
       router.push(mode === "admin" ? "/admin" : "/user");
       router.refresh();
     } catch {

@@ -1,0 +1,13 @@
+node_modules
+.next
+.build
+.smoke
+out
+build
+data/
+*.tsbuildinfo
+*.tgz
+.env.local
+.env*.local
+.DS_Store
+next-env.d.ts

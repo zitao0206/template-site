@@ -8,6 +8,8 @@ export default function LogoutButton() {
   async function onLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     // router.push("/admin/login");
+    // 退出也发通知
+    window.dispatchEvent(new Event("auth:updated"));
     router.push("/"); // 退出后跳首页，你可以改成 /login
     router.refresh();
   }

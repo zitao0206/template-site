@@ -30,7 +30,7 @@ export default async function HomePage() {
             href="/admin"
             className="rounded-lg border border-white/40 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
           >
-            管理后台
+            管理后台入口
           </Link>
         </div>
       </section>
