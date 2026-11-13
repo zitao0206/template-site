@@ -16,6 +16,9 @@ export default function NavHeader() {
   const [loading, setLoading] = useState(true);
   const [cartCount, setCartCount] = useState(0);
 
+  // 管理员是写死账号，没有购物车，右上角不显示购物车入口
+  const isAdmin = user?.role === "admin";
+
   // 购物车角标：显示商品种类数（同一商品买多件只算 1 种）
   const fetchCartCount = async () => {
     try {
@@ -37,8 +40,12 @@ export default function NavHeader() {
       if (res.ok) {
         const u = await res.json();
         setUser(u);
-        // 登录后才拉购物车（未登录接口会 401）
-        await fetchCartCount();
+        // 只有普通用户才拉购物车：管理员没有购物车，未登录会 401
+        if (u?.role === "admin") {
+          setCartCount(0);
+        } else {
+          await fetchCartCount();
+        }
       } else {
         setUser(null);
         setCartCount(0);
@@ -95,34 +102,36 @@ export default function NavHeader() {
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
-          {/* 购物车入口：图标 + 件数角标 */}
-          <button
-            type="button"
-            onClick={goCart}
-            aria-label={cartCount > 0 ? `购物车，共 ${cartCount} 种商品` : "购物车"}
-            className="relative rounded-full p-1.5 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="21"
-              height="21"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          {/* 购物车入口：图标 + 种类角标；管理员账号不显示 */}
+          {!loading && !isAdmin && (
+            <button
+              type="button"
+              onClick={goCart}
+              aria-label={cartCount > 0 ? `购物车，共 ${cartCount} 种商品` : "购物车"}
+              className="relative rounded-full p-1.5 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
             >
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[11px] font-medium leading-[18px] text-white">
-                {cartCount > 99 ? "99+" : cartCount}
-              </span>
-            )}
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[11px] font-medium leading-[18px] text-white">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {loading ? (
             <span className="text-gray-400">加载中</span>
