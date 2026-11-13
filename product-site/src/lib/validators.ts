@@ -51,3 +51,27 @@ export const orderPaySchema = z.object({
     )
     .min(1, "请提供要结算的商品"),
 });
+
+// 收货地址：收件人 / 手机号 / 邮编 / 详细地址
+export const addressSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "收件人姓名至少 2 个字")
+    .max(20, "收件人姓名最多 20 个字"),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^1[3-9]\d{9}$/, "请输入 11 位手机号"),
+  zipCode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "邮政编码应为 6 位数字"),
+  detail: z
+    .string()
+    .trim()
+    .min(5, "详细地址至少 5 个字")
+    .max(120, "详细地址最多 120 个字"),
+  // 是否设为默认地址；不传按 false 处理（首条地址由接口自动设为默认）
+  isDefault: z.boolean().optional(),
+});

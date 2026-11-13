@@ -22,6 +22,8 @@ model User {
   cartItems CartItem[]
   // 订单反向关联
   orders    Order[]
+  // 收货地址反向关联
+  addresses Address[]
 }
 
 model Product {
@@ -87,4 +89,20 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+}
+
+// 收货地址：一个用户可以有多条，管理页可增删
+model Address {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String // 收件人姓名
+  phone     String // 联系电话
+  zipCode   String // 邮政编码
+  detail    String // 详细地址
+  isDefault Boolean  @default(false) // 是否默认地址（同一用户至多一条）
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

@@ -156,9 +156,15 @@ export default function NavHeader() {
             </>
           ) : (
             <>
-              <span className="max-w-[160px] truncate text-gray-600" title={user.email}>
+              {/* 邮箱改成按钮：普通用户进个人资料，管理员进后台 */}
+              <button
+                type="button"
+                onClick={() => router.push(isAdmin ? "/admin" : "/profile")}
+                title={isAdmin ? "进入后台" : "查看个人资料"}
+                className="max-w-[160px] truncate rounded-md px-2 py-1 text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
+              >
                 {user.email}
-              </span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="text-gray-600 hover:text-gray-900"
