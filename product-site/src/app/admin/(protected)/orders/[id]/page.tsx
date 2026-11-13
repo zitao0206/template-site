@@ -25,7 +25,7 @@ export default async function AdminOrderDetailPage({
     where: { id },
     include: {
       items: true,
-      user: { select: { email: true } },
+      user: { select: { id: true, email: true } },
     },
   });
   if (!order) {
@@ -62,7 +62,13 @@ export default async function AdminOrderDetailPage({
           订单号 <span className="font-mono text-gray-900">{order.orderNo}</span>
         </p>
         <p className="text-gray-500">
-          下单用户 <span className="text-gray-900">{order.user.email}</span>
+          下单用户{" "}
+          <Link
+            href={`/admin/users/${order.user.id}`}
+            className="text-gray-900 underline decoration-gray-300 underline-offset-2 hover:text-blue-600"
+          >
+            {order.user.email}
+          </Link>
         </p>
         <p className="text-gray-500">
           下单时间 <span className="text-gray-900">{formatTime(order.createdAt)}</span>

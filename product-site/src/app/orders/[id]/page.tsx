@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/session";
-import { orderStatusClass, orderStatusText } from "@/lib/order-status";
+import {
+  orderStatusClass,
+  userOrderStatusText,
+} from "@/lib/order-status";
 import ConfirmReceiptButton from "@/components/ConfirmReceiptButton";
 
 export const dynamic = "force-dynamic";
@@ -70,7 +73,7 @@ export default async function OrderDetailPage({
           <span
             className={`rounded-full px-2.5 py-1 text-xs ${orderStatusClass(order.status)}`}
           >
-            {orderStatusText(order.status)}
+            {userOrderStatusText(order.status)}
           </span>
         </div>
 
@@ -82,7 +85,7 @@ export default async function OrderDetailPage({
 
         {cancelled && (
           <div className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-gray-200">
-            <p className="text-gray-600">管理员取消留言：</p>
+            <p className="text-gray-600">商家取消留言：</p>
             <p className="mt-1 text-gray-900">{order.cancelReason ?? "（无留言）"}</p>
           </div>
         )}
@@ -98,10 +101,10 @@ export default async function OrderDetailPage({
           <p className="text-sm text-gray-500">商家已接单，正在处理中。</p>
         )}
         {order.status === "COMPLETED" && (
-          <p className="text-sm text-gray-500">订单已完成，感谢购买。</p>
+          <p className="text-sm text-gray-500">订单已经结束，感谢购买。</p>
         )}
         {order.status === "PENDING" && (
-          <p className="text-sm text-gray-500">订单已支付，等待商家处理。</p>
+          <p className="text-sm text-gray-500">等待商家接单。</p>
         )}
       </div>
 

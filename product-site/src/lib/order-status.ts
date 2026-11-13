@@ -24,3 +24,17 @@ export function orderStatusText(status: string) {
 export function orderStatusClass(status: string) {
   return ORDER_STATUS_CLASS[status] ?? "bg-gray-100 text-gray-500";
 }
+
+// 用户视角文案（管理员视角用 ORDER_STATUS_TEXT）
+export const USER_ORDER_STATUS_TEXT: Record<string, string> = {
+  PENDING: "待商家接单",
+  PROCESSING: "商家已接单",
+  SHIPPED: "商家已发货",
+  CANCELLED: "商家已取消",
+  COMPLETED: "订单已经结束",
+  PAID: "待商家接单",
+};
+
+export function userOrderStatusText(status: string) {
+  return USER_ORDER_STATUS_TEXT[status] ?? status;
+}

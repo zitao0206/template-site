@@ -2,7 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/session";
-import { orderStatusClass, orderStatusText } from "@/lib/order-status";
+import {
+  orderStatusClass,
+  userOrderStatusText,
+} from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
 
@@ -74,14 +77,14 @@ export default async function OrdersPage() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-xs ${orderStatusClass(order.status)}`}
                     >
-                      {orderStatusText(order.status)}
+                      {userOrderStatusText(order.status)}
                     </span>
                   </div>
                 </div>
 
                 {cancelled && (
                   <p className="rounded-lg bg-white px-3 py-2 text-xs text-gray-600 ring-1 ring-gray-200">
-                    取消留言：{order.cancelReason ?? "（无留言）"}
+                    商家留言：{order.cancelReason ?? "（无留言）"}
                   </p>
                 )}
 

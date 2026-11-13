@@ -129,7 +129,7 @@ export default async function AdminOrdersPage() {
                     href={`/admin/orders/${order.id}`}
                     className="text-gray-500 hover:text-gray-900"
                   >
-                    管理订单 →
+                    查看订单 →
                   </Link>
                   <div className="flex items-center gap-3">
                     <span className="text-gray-500">合计</span>
