@@ -37,3 +37,15 @@ export const cartAddSchema = z.object({
 export const cartQuantitySchema = z.object({
   quantity: z.coerce.number().int("数量必须是整数").min(1, "数量至少为 1"),
 });
+
+// 购物车：支付成功后按结算明细清理（数量可能因库存被下调，所以按件数扣减）
+export const cartSettleSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        productId: z.coerce.number().int("商品 id 必须是整数").positive("商品 id 不合法"),
+        quantity: z.coerce.number().int("数量必须是整数").min(1, "数量至少为 1"),
+      }),
+    )
+    .min(1, "请提供要结算的商品"),
+});

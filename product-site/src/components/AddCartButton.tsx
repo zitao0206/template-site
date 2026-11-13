@@ -63,6 +63,11 @@ export default function AddCartButton({ productId, stock }: Props) {
     }
   }
 
+  // 立即购买：直接进预定下单页（未登录会在下单页跳登录）
+  const buyNow = () => {
+    router.push(`/checkout?productId=${productId}&quantity=${quantity}`);
+  };
+
   return (
     <div className="space-y-3">
       {/* 数量选择：加在「加入购物车」按钮上方 */}
@@ -96,34 +101,44 @@ export default function AddCartButton({ productId, stock }: Props) {
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* 淘宝样式：加入购物车 + 立即购买 并排 */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={addToCart}
           disabled={soldOut || loading}
-          className="btn-primary"
+          className="inline-flex flex-1 items-center justify-center rounded-full border border-orange-500 bg-orange-50 px-5 py-2.5 text-sm font-medium text-orange-600 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "加入中…" : soldOut ? "已售罄" : "加入购物车"}
         </button>
 
-        {message && (
-          <span className={`text-xs ${message.ok ? "text-green-600" : "text-red-600"}`}>
-            {message.text}
-            {message.ok && (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  onClick={() => router.push("/cart")}
-                  className="text-blue-600 underline"
-                >
-                  去购物车
-                </button>
-              </>
-            )}
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={buyNow}
+          disabled={soldOut || loading}
+          className="inline-flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          立即购买
+        </button>
       </div>
+
+      {message && (
+        <span className={`text-xs ${message.ok ? "text-green-600" : "text-red-600"}`}>
+          {message.text}
+          {message.ok && (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={() => router.push("/cart")}
+                className="text-blue-600 underline"
+              >
+                去购物车
+              </button>
+            </>
+          )}
+        </span>
+      )}
     </div>
   );
 }

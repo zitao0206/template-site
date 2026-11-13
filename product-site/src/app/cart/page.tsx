@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { buildItemsParam, makeOrderNo } from "@/lib/order-items";
 
 type CartItem = {
   id: number;
@@ -136,6 +137,18 @@ export default function CartPage() {
     (sum, it) => sum + it.quantity * it.product.price,
     0,
   );
+
+  // 去结算：带上勾选的商品直接进收银台（购物车已确认过数量与金额）
+  const goCheckout = () => {
+    if (selectedItems.length === 0) return;
+    const items = buildItemsParam(
+      selectedItems.map((it) => ({
+        productId: it.product.id,
+        quantity: it.quantity,
+      })),
+    );
+    router.push(`/pay?orderNo=${makeOrderNo()}&items=${items}`);
+  };
 
   if (loading) {
     return <p className="text-sm text-gray-500">正在加载购物车…</p>;
@@ -317,11 +330,13 @@ export default function CartPage() {
               )}
             </div>
             <button
-              className="btn-primary"
-              disabled
-              title={selectedTypeCount > 0 ? "下单功能后续版本开放" : "请先勾选商品"}
+              type="button"
+              onClick={goCheckout}
+              disabled={selectedTypeCount === 0}
+              className="btn-primary disabled:cursor-not-allowed"
+              title={selectedTypeCount > 0 ? "去结算并进入收银台" : "请先勾选商品"}
             >
-              去结算（V2）
+              去结算（{selectedCount} 件）
             </button>
           </div>
         </>
