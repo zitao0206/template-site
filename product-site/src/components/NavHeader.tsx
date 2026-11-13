@@ -97,9 +97,9 @@ export default function NavHeader() {
         <Link href="/" className="font-semibold text-gray-900">
           商品站首页
         </Link>
-        <Link href="/products" className="text-gray-600 hover:text-gray-900">
+        {/* <Link href="/products" className="text-gray-600 hover:text-gray-900">
           全部商品
-        </Link>
+        </Link> */}
 
         <div className="ml-auto flex items-center gap-3">
           {/* 我的订单入口：在购物车左边；登录用户可见，管理员走后台 */}

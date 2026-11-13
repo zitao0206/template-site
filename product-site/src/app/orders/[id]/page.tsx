@@ -84,9 +84,9 @@ export default async function OrderDetailPage({
         )}
 
         {cancelled && (
-          <div className="rounded-lg bg-white px-3 py-2 text-sm ring-1 ring-gray-200">
+          <div className="rounded-lg bg-red-50/70 px-3 py-2 text-sm ring-1 ring-red-200">
             <p className="text-gray-600">商家取消留言：</p>
-            <p className="mt-1 text-gray-900">{order.cancelReason ?? "（无留言）"}</p>
+            <p className="mt-1 text-red-600">{order.cancelReason ?? "（无留言）"}</p>
           </div>
         )}
 
