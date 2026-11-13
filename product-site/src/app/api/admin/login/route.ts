@@ -18,6 +18,9 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data;
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  // 👇 新增两行日志，看终端输出
+  // console.log("adminEmail:", adminEmail);
+  // console.log("adminHash raw:", adminHash);
 
   if (!adminEmail || !adminHash) {
     return NextResponse.json(
