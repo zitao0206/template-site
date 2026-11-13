@@ -77,3 +77,24 @@ export const addressSchema = z.object({
   // 是否设为默认地址；不传按 false 处理（首条地址由接口自动设为默认）
   isDefault: z.boolean().optional(),
 });
+
+// 管理员订单操作：接单 / 取消（带留言） / 发货（带单号）
+export const orderActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("accept") }),
+  z.object({
+    action: z.literal("cancel"),
+    reason: z
+      .string()
+      .trim()
+      .min(2, "请填写取消原因（至少 2 个字）")
+      .max(100, "取消原因最多 100 个字"),
+  }),
+  z.object({
+    action: z.literal("ship"),
+    trackingNo: z
+      .string()
+      .trim()
+      .min(5, "发货单号至少 5 位")
+      .max(40, "发货单号最多 40 位"),
+  }),
+]);

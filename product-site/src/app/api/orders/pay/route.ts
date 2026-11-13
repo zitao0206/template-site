@@ -114,7 +114,7 @@ export async function POST(req: Request) {
           orderNo,
           userId,
           totalAmount,
-          status: "PAID",
+          status: "PENDING",
           receiverName: address.name,
           receiverPhone: address.phone,
           receiverZip: address.zipCode,

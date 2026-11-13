@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { readSession } from "@/lib/session";
+import { orderStatusClass, orderStatusText } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ function formatTime(date: Date) {
   return new Date(date).toLocaleString("zh-CN", { hour12: false });
 }
 
-// 用户订单列表：只显示自己的订单
+// 用户订单列表：只显示自己的订单；已取消的订单整卡置灰
 export default async function OrdersPage() {
   const session = await readSession();
   if (!session) {
@@ -50,26 +51,39 @@ export default async function OrdersPage() {
         <ul className="space-y-4">
           {orders.map((order) => {
             const totalQty = order.items.reduce((sum, it) => sum + it.quantity, 0);
+            const cancelled = order.status === "CANCELLED";
             return (
-              <li key={order.id} className="card space-y-3">
+              <li
+                key={order.id}
+                className={`card space-y-3 ${
+                  cancelled ? "border-gray-200 bg-gray-50/70 opacity-70" : ""
+                }`}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 text-sm">
                   <div className="text-gray-500">
                     订单号{" "}
-                    <span className="font-mono text-gray-900">{order.orderNo}</span>
+                    <Link
+                      href={`/orders/${order.id}`}
+                      className="font-mono text-gray-900 hover:underline"
+                    >
+                      {order.orderNo}
+                    </Link>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400">{formatTime(order.createdAt)}</span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs ${
-                        order.status === "PAID"
-                          ? "bg-green-50 text-green-600"
-                          : "bg-amber-50 text-amber-600"
-                      }`}
+                      className={`rounded-full px-2 py-0.5 text-xs ${orderStatusClass(order.status)}`}
                     >
-                      {order.status === "PAID" ? "已支付" : order.status}
+                      {orderStatusText(order.status)}
                     </span>
                   </div>
                 </div>
+
+                {cancelled && (
+                  <p className="rounded-lg bg-white px-3 py-2 text-xs text-gray-600 ring-1 ring-gray-200">
+                    取消留言：{order.cancelReason ?? "（无留言）"}
+                  </p>
+                )}
 
                 {order.receiverName && (
                   <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
@@ -99,11 +113,19 @@ export default async function OrdersPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-3 text-sm">
-                  <span className="text-gray-500">共 {totalQty} 件，合计</span>
-                  <span className="text-lg font-semibold text-red-600">
-                    ¥{(order.totalAmount / 100).toFixed(2)}
-                  </span>
+                <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-sm">
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="text-gray-500 hover:text-gray-900"
+                  >
+                    查看详情 →
+                  </Link>
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500">共 {totalQty} 件，合计</span>
+                    <span className="text-lg font-semibold text-red-600">
+                      ¥{(order.totalAmount / 100).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </li>
             );

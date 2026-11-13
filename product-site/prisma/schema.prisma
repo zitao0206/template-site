@@ -67,7 +67,10 @@ model Order {
   orderNo         String   @unique
   userId          Int
   totalAmount     Int // 单位：分，下单时的实付金额
-  status          String   @default("PAID")
+  // PENDING 待处理 / PROCESSING 处理中 / SHIPPED 已发货 / COMPLETED 已结束 / CANCELLED 已取消
+  status          String   @default("PENDING")
+  cancelReason    String? // 管理员取消订单时的留言（用户可见）
+  trackingNo      String? // 发货单号
   // 收货信息快照（下单时写入，后续改地址不影响历史订单）
   receiverName    String?
   receiverPhone   String?
