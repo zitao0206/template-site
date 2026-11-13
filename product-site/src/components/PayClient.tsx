@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { PayLine } from "@/lib/order-items";
+import AddressPicker, { type PickerAddress } from "@/components/AddressPicker";
 
 // 生成一个伪二维码矩阵（仅作演示，不承载真实支付信息）
 function buildQrMatrix(seed: string, size = 21): boolean[][] {
@@ -51,18 +52,23 @@ export default function PayClient({
   buyerEmail,
   adjusted,
   fromCart,
+  addresses,
+  initialAddressId,
 }: {
   orderNo: string;
   lines: PayLine[];
   buyerEmail: string;
   adjusted: boolean;
   fromCart: boolean;
+  addresses: PickerAddress[];
+  initialAddressId: number | null;
 }) {
   const [method, setMethod] = useState<"alipay" | "wechat">("alipay");
   const [left, setLeft] = useState(15 * 60);
   const [paid, setPaid] = useState(false);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState("");
+  const [addressId, setAddressId] = useState<number | null>(initialAddressId);
 
   const total = lines.reduce((sum, l) => sum + l.price * l.quantity, 0);
   const totalQty = lines.reduce((sum, l) => sum + l.quantity, 0);
@@ -81,6 +87,10 @@ export default function PayClient({
   // 模拟支付：服务端扣库存 +（购物车来源）清已结算条目，成功后才进入成功态
   const confirmPay = async () => {
     if (expired || paying) return;
+    if (!addressId) {
+      setPayError("请先添加并选择收货地址");
+      return;
+    }
     setPaying(true);
     setPayError("");
     try {
@@ -90,6 +100,7 @@ export default function PayClient({
         body: JSON.stringify({
           orderNo,
           fromCart,
+          addressId,
           items: lines.map((l) => ({ productId: l.id, quantity: l.quantity })),
         }),
       });
@@ -142,7 +153,7 @@ export default function PayClient({
             </p>
           </div>
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            当前为 V3.0 演示收银台，真实支付与订单落库将在 V4.0 接入。
+            当前为演示收银台：订单已按所选收货地址落库，真实支付通道将在 V4.0 接入。
           </p>
           {fromCart && (
             <p className="text-xs text-gray-500">已把本次结算的商品从购物车移除。</p>
@@ -171,6 +182,20 @@ export default function PayClient({
         </div>
       ) : (
         <>
+          <AddressPicker
+            initialAddresses={addresses}
+            selectedId={addressId}
+            onSelect={(id) => {
+              setAddressId(id);
+              setPayError("");
+            }}
+            manageHref={`/profile/addresses?from=${encodeURIComponent(
+              `/pay?orderNo=${orderNo}&items=${lines
+                .map((l) => `${l.id}:${l.quantity}`)
+                .join(",")}${fromCart ? "&from=cart" : ""}`,
+            )}`}
+          />
+
           <div className="card space-y-1 text-center">
             <p className="text-sm text-gray-500">应付金额</p>
             <p className="text-3xl font-bold text-red-600">

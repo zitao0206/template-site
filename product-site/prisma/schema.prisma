@@ -63,12 +63,17 @@ model CartItem {
 // 订单：V3.0.3 起支付成功即落库（真实支付回调在 V4.0 接入）
 // status: "PAID"（已支付）；V4 可扩 "PENDING" / "CANCELLED" / "SHIPPED"
 model Order {
-  id          Int      @id @default(autoincrement())
-  orderNo     String   @unique
-  userId      Int
-  totalAmount Int // 单位：分，下单时的实付金额
-  status      String   @default("PAID")
-  createdAt   DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  orderNo         String   @unique
+  userId          Int
+  totalAmount     Int // 单位：分，下单时的实付金额
+  status          String   @default("PAID")
+  // 收货信息快照（下单时写入，后续改地址不影响历史订单）
+  receiverName    String?
+  receiverPhone   String?
+  receiverZip     String?
+  receiverAddress String?
+  createdAt       DateTime @default(now())
 
   user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items OrderItem[]

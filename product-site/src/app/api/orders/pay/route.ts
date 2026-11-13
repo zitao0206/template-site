@@ -24,8 +24,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const { orderNo, items, fromCart } = parsed.data;
+  const { orderNo, items, fromCart, addressId } = parsed.data;
   const userId = session.uid;
+
+  // 收货地址必须属于本人，取出来做快照
+  const address = await prisma.address.findUnique({ where: { id: addressId } });
+  if (!address || address.userId !== userId) {
+    return NextResponse.json({ error: "收货地址不存在，请重新选择" }, { status: 400 });
+  }
 
   // 幂等：订单号已存在（重复点击/刷新重付）直接返回，不再扣库存
   const existing = await prisma.order.findUnique({ where: { orderNo } });
@@ -109,6 +115,10 @@ export async function POST(req: Request) {
           userId,
           totalAmount,
           status: "PAID",
+          receiverName: address.name,
+          receiverPhone: address.phone,
+          receiverZip: address.zipCode,
+          receiverAddress: address.detail,
           items: { create: linesData },
         },
       });

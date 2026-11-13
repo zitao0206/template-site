@@ -23,7 +23,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
     const back = `/checkout?productId=${productId}&quantity=${quantity}`;
     redirect(`/login?redirect=${encodeURIComponent(back)}`);
   }
-  if (session.role === "admin") {
+  const userId = session.uid;
+  if (userId === null) {
     redirect("/admin");
   }
 
@@ -32,8 +33,21 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
     redirect("/products");
   }
 
+  const addresses = await prisma.address.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <CheckoutClient
+      addresses={addresses.map((a) => ({
+        id: a.id,
+        name: a.name,
+        phone: a.phone,
+        zipCode: a.zipCode,
+        detail: a.detail,
+        isDefault: a.isDefault,
+      }))}
       product={{
         id: product.id,
         title: product.title,

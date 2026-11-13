@@ -12,6 +12,7 @@ type Search = {
   productId?: string; // 老参数兼容
   quantity?: string;
   from?: string; // from=cart 表示购物车结算，只有它才清购物车
+  addressId?: string; // 收货地址 id（从结算页带过来）
 };
 
 // GET /pay?orderNo=xxx&items=1:2,3:1  模拟收银台（V4.0 接真实支付）
@@ -48,7 +49,8 @@ export default async function PayPage({ searchParams }: { searchParams: Search }
   if (!session) {
     redirect(`/login?redirect=${encodeURIComponent(back)}`);
   }
-  if (session.role === "admin") {
+  const userId = session.uid;
+  if (userId === null) {
     redirect("/admin");
   }
 
@@ -81,6 +83,16 @@ export default async function PayPage({ searchParams }: { searchParams: Search }
     redirect(fromCart ? "/cart" : "/products");
   }
 
+  // 收货地址：优先用链接带来的 id，其次默认地址，再退回第一条
+  const addresses = await prisma.address.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  const wantedId = Number(searchParams.addressId);
+  const validWanted = addresses.some((a) => a.id === wantedId) ? wantedId : null;
+  const initialAddressId =
+    validWanted ?? addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null;
+
   return (
     <PayClient
       orderNo={orderNo}
@@ -88,6 +100,15 @@ export default async function PayPage({ searchParams }: { searchParams: Search }
       buyerEmail={session.email}
       adjusted={adjusted}
       fromCart={fromCart}
+      addresses={addresses.map((a) => ({
+        id: a.id,
+        name: a.name,
+        phone: a.phone,
+        zipCode: a.zipCode,
+        detail: a.detail,
+        isDefault: a.isDefault,
+      }))}
+      initialAddressId={initialAddressId}
     />
   );
 }

@@ -6,8 +6,14 @@ import AddressManager from "@/components/AddressManager";
 
 export const dynamic = "force-dynamic";
 
-// 地址管理：列表 + 新增 + 删除
-export default async function AddressesPage() {
+type Search = { from?: string };
+
+// 地址管理：列表 + 新增 + 编辑 + 删除
+export default async function AddressesPage({
+  searchParams,
+}: {
+  searchParams: Search;
+}) {
   const session = await readSession();
   if (!session) {
     redirect("/login?redirect=/profile/addresses");
@@ -16,6 +22,11 @@ export default async function AddressesPage() {
     redirect("/admin");
   }
 
+  // 从结算/收银台进来的，返回链接要回原页面，不能写死「返回个人资料」
+  const rawFrom = typeof searchParams.from === "string" ? searchParams.from : "";
+  const safeFrom =
+    rawFrom.startsWith("/") && !rawFrom.startsWith("//") ? rawFrom : null;
+
   const addresses = await prisma.address.findMany({
     where: { userId: session.uid },
     orderBy: { createdAt: "desc" },
@@ -23,8 +34,11 @@ export default async function AddressesPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <Link href="/profile" className="text-sm text-gray-500 hover:text-gray-900">
-        ← 返回个人资料
+      <Link
+        href={safeFrom ?? "/profile"}
+        className="text-sm text-gray-500 hover:text-gray-900"
+      >
+        {safeFrom ? "← 返回下单页" : "← 返回个人资料"}
       </Link>
 
       <div>

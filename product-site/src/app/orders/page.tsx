@@ -71,6 +71,15 @@ export default async function OrdersPage() {
                   </div>
                 </div>
 
+                {order.receiverName && (
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    <span className="text-gray-900">{order.receiverName}</span>
+                    <span className="ml-2">{order.receiverPhone}</span>
+                    <span className="ml-2">邮编 {order.receiverZip}</span>
+                    <span className="mt-1 block">{order.receiverAddress}</span>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   {order.items.map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3 text-sm">

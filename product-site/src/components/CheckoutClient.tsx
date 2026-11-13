@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { buildItemsParam, makeOrderNo } from "@/lib/order-items";
+import AddressPicker, { type PickerAddress } from "@/components/AddressPicker";
 
 type Product = {
   id: number;
@@ -16,12 +17,18 @@ type Product = {
 export default function CheckoutClient({
   product,
   initialQuantity,
+  addresses,
 }: {
   product: Product;
   initialQuantity: number;
+  addresses: PickerAddress[];
 }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(initialQuantity);
+  // 默认选中“默认地址”，否则选第一条；没有地址则为 null
+  const [addressId, setAddressId] = useState<number | null>(
+    addresses.find((a) => a.isDefault)?.id ?? addresses[0]?.id ?? null,
+  );
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,10 +55,14 @@ export default function CheckoutClient({
       setError(`数量需在 1 ~ ${product.stock} 之间`);
       return;
     }
+    if (!addressId) {
+      setError("请先添加并选择收货地址");
+      return;
+    }
     setSubmitting(true);
     const orderNo = makeOrderNo();
     const items = buildItemsParam([{ productId: product.id, quantity }]);
-    router.push(`/pay?orderNo=${orderNo}&items=${items}`);
+    router.push(`/pay?orderNo=${orderNo}&items=${items}&addressId=${addressId}`);
   };
 
   return (
@@ -73,6 +84,18 @@ export default function CheckoutClient({
       {error && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
+
+      <AddressPicker
+        initialAddresses={addresses}
+        selectedId={addressId}
+        onSelect={(id) => {
+          setAddressId(id);
+          setError("");
+        }}
+        manageHref={`/profile/addresses?from=${encodeURIComponent(
+          `/checkout?productId=${product.id}&quantity=${quantity}`,
+        )}`}
+      />
 
       <div className="card space-y-4">
         <div className="flex gap-4">
